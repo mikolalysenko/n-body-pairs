@@ -1,0 +1,38 @@
+{
+  "name": "n-body-pairs",
+  "version": "0.0.0",
+  "description": "Given a collection of spheres with equal radii, find all pairwise intersections.",
+  "main": "pairs.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "tap": "~0.4.1"
+  },
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mikolalysenko/n-body-pairs.git"
+  },
+  "keywords": [
+    "point",
+    "pairs",
+    "overlap",
+    "n",
+    "body",
+    "collision",
+    "detect",
+    "detection",
+    "collide",
+    "simulate",
+    "sphere",
+    "radius"
+  ],
+  "author": "Mikola Lysenko",
+  "license": "BSD",
+  "readmeFilename": "README.md",
+  "gitHead": "ee6f5c7993073cb19fc9bb1bc19cbf9e29fc11e1"
+}
