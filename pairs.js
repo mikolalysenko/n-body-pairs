@@ -98,7 +98,7 @@ k_loop:
         }
         //Then check if l2 bound holds
         if(d2 <= r2) {
-          if(cb(a, b)) {
+          if(cb(a, b, d2)) {
             return
           }
         }

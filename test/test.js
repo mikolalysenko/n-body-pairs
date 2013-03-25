@@ -13,8 +13,8 @@ require("tap").test("n-body-pairs", function(t) {
 
   //Report all pairs of points which are within 1.5 units of eachother
   var pairs = []
-  nbp(points, 1.1, function(i,j) {
-    console.log("Overlap ("+i+","+j+"):", points[i], points[j])
+  nbp(points, 1.1, function(i,j,d2) {
+    console.log("Overlap ("+i+","+j+") Distance=", Math.sqrt(d2), "Positions=", points[i], points[j])
     pairs.push([Math.min(i,j), Math.max(i,j)])
   })
   pairs.sort()
