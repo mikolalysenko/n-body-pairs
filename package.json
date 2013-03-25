@@ -1,6 +1,6 @@
 {
   "name": "n-body-pairs",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Given a collection of spheres with equal radii, find all pairwise intersections.",
   "main": "pairs.js",
   "directories": {

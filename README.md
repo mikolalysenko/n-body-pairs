@@ -51,8 +51,7 @@ Computes all pairwise overlaps
 
 **Space Complexity:** Size of storage is `O(points.length * 2^dimension)`
 
-Using Storage
-=============
+## Storage
 To avoid reallocating the array, you can preallocate storage for the data structure.  Here is an example of how to do this:
 
 ```javascript
