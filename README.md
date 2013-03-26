@@ -63,7 +63,7 @@ Returns the size of the data structure (set to 0 to free memory.  Set to change 
 [See for yourself!](https://github.com/mikolalysenko/n-body-bench)
 
 ## How does it work?
-[Epsilon nets.](http://en.wikipedia.org/wiki/%25CE%2595-net_%28computational_geometry%29)
+[Epsilon nets.](http://en.wikipedia.org/wiki/Ε-net_%28computational_geometry%29)
 
 
 Credits
