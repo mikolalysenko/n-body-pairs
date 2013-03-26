@@ -5,7 +5,7 @@ function Storage(max_points, dimension) {
   this.points = new Array(dimension)
   for(var i=0; i<dimension; ++i) {
     this.coordinates[i] = new Int32Array(max_points<<dimension)
-    this.points[i] = new Float32Array(max_points<<dimension)
+    this.points[i] = new Float64Array(max_points<<dimension)
   }
   this.indices = new Int32Array(max_points<<dimension)
 }
@@ -14,30 +14,28 @@ Storage.prototype.resize = function(max_points) {
   var dimension = this.coordinates.length
   for(var i=0; i<dimension; ++i) {
     this.coordinates[i] = new Int32Array(max_points<<dimension)
-    this.points[i] = new Float32Array(max_points<<dimension)
+    this.points[i] = new Float64Array(max_points<<dimension)
   }
   this.indices = new Int32Array(max_points<<dimension)
-}
-
-Storage.prototype.createWord = function() {
-  return new Array(2*this.coordinates.length+1)
 }
 
 Storage.prototype.size = function() {
   return this.indices >> this.coordinates.length
 }
 
-Storage.prototype.move = function(i, j) {
+Storage.prototype.move = function(p, q) {
   var coords = this.coordinates
     , points = this.points
-    , a, b
-  for(var k=0, d=coords.length; k<d; ++k) {
+    , indices = this.indices
+    , dimension = coords.length
+    , a, b, k
+  for(k=0; k<dimension; ++k) {
     a = coords[k]
-    a[i] = a[j]
+    a[p] = a[q]
     b = points[k]
-    b[i] = b[j]
+    b[p] = b[q]
   }
-  this.indices[i] = this.indices[j]
+  indices[p] = indices[q]
 }
 
 Storage.prototype.load = function(scratch, i) {
@@ -114,20 +112,49 @@ Storage.prototype.compareS = function(i, scratch) {
  */
 Storage.prototype.sort = function(n) {
   var coords = this.coordinates
+  var points = this.points
   var indices = this.indices
-  var dimension = coords.length
-  var stack = [];
-  var sp = -1;
-  var left = 0;
-  var right = n - 1;
-  var i, j, swap = this.createWord()
+  var dimension = coords.length|0
+  var stack = []
+  var sp = -1
+  var left = 0
+  var right = n - 1
+  var i, j, k, d, swap = new Array(2*dimension+1), a, b, p, q, t
+  for(i=0; i<dimension; ++i) {
+    swap[i] = 0|0
+  }
+  swap[dimension] = 0|0
+  for(i=0; i<dimension; ++i) {
+    swap[dimension+1+i] = +0.0
+  }
   while(true) {
     if(right - left <= 25){
       for(j=left+1; j<=right; j++) {
-        this.load(swap, j)
-        i = j-1;
-        while(i >= left && this.compareS(i, swap) > 0) {
-          this.move(i+1, i--)
+        for(k=0; k<dimension; ++k) {
+          swap[k] = coords[k][j]|0
+          swap[k+dimension+1] = +points[k][j]
+        }
+        swap[dimension] = indices[j]|0
+        i = j-1;        
+lo_loop:
+        while(i >= left) {
+          for(k=0; k<dimension; ++k) {
+            d = coords[k][i] - swap[k]
+            if(d < 0) {
+              break lo_loop
+            } if(d > 0) {
+              break
+            }
+          }
+          p = i+1
+          q = i--
+          for(k=0; k<dimension; ++k) {
+            a = coords[k]
+            a[p] = a[q]
+            b = points[k]
+            b[p] = b[q]
+          }
+          indices[p] = indices[q]
         }
         this.store(i+1, swap)
       }
@@ -150,10 +177,50 @@ Storage.prototype.sort = function(n) {
       
       this.load(swap, i)
       while(true){
-        do i++; while(this.compareS(i, swap) < 0);
-        do j--; while(this.compareS(j, swap) > 0);
+ii_loop:
+        while(true) {
+          ++i
+          for(k=0; k<dimension; ++k) {
+            d = coords[k][i] - swap[k]
+            if(d > 0) {
+              break ii_loop
+            } if(d < 0) {
+              continue ii_loop
+            }
+          }
+          if(indices[i] >= swap[dimension]) {
+            break
+          }
+        }
+jj_loop:
+        while(true) {
+          --j
+          for(k=0; k<dimension; ++k) {
+            d = coords[k][j] - swap[k]
+            if(d < 0) {
+              break jj_loop
+            } if(d > 0) {
+              continue jj_loop
+            }
+          }
+          if(indices[j] <= swap[dimension]) {
+            break
+          }
+        }
         if(j < i)    break;
-        this.swap(i,j)
+        for(k=0; k<dimension; ++k) {
+          a = coords[k]
+          t = a[i]
+          a[i] = a[j]
+          a[j] = t
+          b = points[k]
+          t = b[i]
+          b[i] = b[j]
+          b[j] = t
+        }
+        t = indices[i]
+        indices[i] = indices[j]
+        indices[j] = t
       }
       this.move(left+1, j)
       this.store(j, swap)
@@ -187,8 +254,8 @@ Storage.prototype.hashPoints = function(points, bucketSize, radius) {
       var ix = floor(p[j]/bucketSize)
       coords[j][ptr] = ix
       spoints[j][ptr] = p[j]
-      if(bucketSize*(ix+1) < p[j]+2*radius) {
-        cross |= (1<<j)
+      if(bucketSize*(ix+1) <= p[j]+2*radius) {
+        cross += (1<<j)
       }
     }
     indices[ptr++] = i
@@ -208,7 +275,19 @@ Storage.prototype.hashPoints = function(points, bucketSize, radius) {
   return ptr
 }
 
-Storage.prototype.findPairs = function(cellCount, bucketSize, radius, cb) {
+Storage.prototype.printState = function(cellCount) {
+  for(var i=0; i<cellCount; ++i) {
+    var nc = []
+    var np = []
+    for(var j=0; j<this.coordinates.length; ++j) {
+      nc[j] = this.coordinates[j][i]
+      np[j] = this.points[j][i]
+    }
+    console.log(this.indices[i], "["+nc+"]", "["+np+"]")
+  }
+}
+
+Storage.prototype.computePairs = function(cellCount, bucketSize, radius, cb) {
   var floor = Math.floor
     , coords = this.coordinates
     , points = this.points
@@ -216,7 +295,7 @@ Storage.prototype.findPairs = function(cellCount, bucketSize, radius, cb) {
     , dimension = coords.length|0
     , ptr = 0
     , r2 = 4 * radius * radius
-    , i,j,k, l
+    , i, j, k, l
     , a, b, pa, pb, d, d2, ac, bc
   for(i=0; i<cellCount;) {
     for(j=i+1; j<cellCount; ++j) {
@@ -253,23 +332,33 @@ k_loop:
   }
 }
 
-function findPairs(points, radius, cb, grid) {
-  if(points.length === 0) {
-    return
+function createNBodyDataStructure(dimension, num_points) {
+  dimension = (dimension|0) || 2
+  var grid = new Storage(num_points||1024, dimension)
+  
+  function findPairs(points, radius, cb) {
+    var count = points.length|0
+    var cellCount = count<<dimension
+    if(grid.size() < cellCount) {
+      grid.resize(count)
+    }
+    var bucketSize = 4*radius
+    var nc = grid.hashPoints(points, bucketSize, radius)
+    grid.sort(nc)
+    grid.computePairs(nc, bucketSize, radius, cb)
   }
-  var count = points.length|0
-  var dimension = points[0].length|0
-  var cellCount = count<<dimension
-  if(!grid) {
-    grid = new Storage(count, dimension)
-  } else if(grid.size() < cellCount) {
-    grid.resize(count)
+  
+  findPairs.resize = function(n_points) {
+    grid.resize(n_points)
   }
-  var bucketSize = 2*radius
-  var nc = grid.hashPoints(points, bucketSize, radius)
-  grid.sort(nc)
-  grid.findPairs(nc, bucketSize, radius, cb)
+  
+  Object.defineProperty(findPairs, "capacity", {
+    get: function() {
+      return grid.size()
+    }
+  })
+  
+  return findPairs
 }
 
-module.exports = findPairs
-module.exports.allocateStorage = function(n, d) { return new Storage(n, d) }
+module.exports = createNBodyDataStructure

@@ -11,8 +11,8 @@ First install using npm:
 Then use it as follows:
 
 ```javascript
-//Load the library
-var nbp = require("n-body-pairs")
+//Load the library, allocate initial data structure for 3D searching
+var nbp = require("n-body-pairs")(3)
 
 //Create some points
 var points = [
@@ -22,6 +22,7 @@ var points = [
   [0, 0, 100000000],
   [0, 0, 100000001]
 ]
+
 
 //Report all pairs of points which are within 1.1 units of eachother
 nbp(points, 1.1, function(i,j,d2) {
