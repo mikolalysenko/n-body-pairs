@@ -40,10 +40,10 @@ function compareLex(a, b) {
     var d = a[i] - b[i]
     if(d) { return d }
   }
-  return 0
+  return a[len] - b[len]
 }
 
-function findPairs_impl(points, count, dimension, radius, cb, grid, compareFun) {
+function findPairs_impl(points, count, dimension, radius, cb, grid) {
   var floor = Math.floor
     , dbits = 1<<dimension
     , ptr = 0
@@ -62,7 +62,7 @@ function findPairs_impl(points, count, dimension, radius, cb, grid, compareFun) 
       g[dimension]=i
     }
   }
-  grid.sort(compareFun)
+  grid.sort(compareLex)
   var r2 = radius * radius
   for(var i=0, len=grid.length; i<len; ++i) {
     var cs = grid[i]
@@ -86,14 +86,14 @@ k_loop:
         for(var l=0; l<dimension; ++l) {
           var ac = pa[l]
           var bc = pb[l]
-          var d = ac - bc
-          if(d >= 0) {
+          if(ac > bc) {
             if(cs[l] !== (floor(pa[l]/radius)|0)) {
               continue k_loop
             }
           } else if(cs[l] !== (floor(pb[l]/radius)|0)) {
             continue k_loop
           }
+          var d = ac - bc
           d2 += d * d
         }
         //Then check if l2 bound holds
@@ -119,7 +119,7 @@ function findPairs(points, radius, cb, grid) {
   } else if(grid.length < (count<<dimension)) {
     reserveGrid(grid, count, dimension)
   }
-  findPairs_impl(points, count, dimension, radius, cb, grid, compareLex)
+  findPairs_impl(points, count, dimension, 2*radius, cb, grid, compareLex)
 }
 
 module.exports = findPairs
