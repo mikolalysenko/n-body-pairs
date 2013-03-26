@@ -275,18 +275,6 @@ Storage.prototype.hashPoints = function(points, bucketSize, radius) {
   return ptr
 }
 
-Storage.prototype.printState = function(cellCount) {
-  for(var i=0; i<cellCount; ++i) {
-    var nc = []
-    var np = []
-    for(var j=0; j<this.coordinates.length; ++j) {
-      nc[j] = this.coordinates[j][i]
-      np[j] = this.points[j][i]
-    }
-    console.log(this.indices[i], "["+nc+"]", "["+np+"]")
-  }
-}
-
 Storage.prototype.computePairs = function(cellCount, bucketSize, radius, cb) {
   var floor = Math.floor
     , coords = this.coordinates
@@ -348,12 +336,12 @@ function createNBodyDataStructure(dimension, num_points) {
     grid.computePairs(nc, bucketSize, radius, cb)
   }
   
-  findPairs.resize = function(n_points) {
-    grid.resize(n_points)
-  }
-  
   Object.defineProperty(findPairs, "capacity", {
     get: function() {
+      return grid.size()
+    },
+    set: function(n_capacity) {
+      grid.resize(n_points)
       return grid.size()
     }
   })
