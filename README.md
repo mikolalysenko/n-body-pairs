@@ -59,6 +59,13 @@ Computes all pairwise overlaps.  If the data structure does not have sufficient 
 ### `nbp.capacity`
 Returns the size of the data structure (set to 0 to free memory.  Set to change the reserve capacity of the data structure.
 
+## Is the library fast?
+[See for yourself!](https://github.com/mikolalysenko/n-body-bench)
+
+## How does it work?
+[Epsilon nets.](http://en.wikipedia.org/wiki/%25CE%2595-net_%28computational_geometry%29)
+
+
 Credits
 =======
 (c) 2013 Mikola Lysenko. BSD License
