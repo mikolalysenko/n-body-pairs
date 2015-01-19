@@ -62,9 +62,6 @@ Returns the size of the data structure (set to 0 to free memory.  Set to change 
 ## Is the library fast?
 [See for yourself!](https://github.com/mikolalysenko/n-body-bench)
 
-## How does it work?
-[Epsilon nets.](http://en.wikipedia.org/wiki/Ε-net_%28computational_geometry%29)
-
 
 Credits
 =======
